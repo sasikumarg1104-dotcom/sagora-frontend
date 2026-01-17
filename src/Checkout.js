@@ -1,47 +1,60 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import {
-  FaArrowLeft,
-  FaCheckCircle,
-  FaCreditCard,
-  FaGooglePay,
-  FaMoneyBillWave,
-} from "react-icons/fa";
 
 function Checkout({ cartItems, dark, placeOrder }) {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [method, setMethod] = useState("upi");
+
+  const [address, setAddress] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    city: "",
+    pincode: "",
+  });
 
   const total = cartItems.reduce(
     (sum, item) => sum + item.price * item.qty,
     0
   );
 
-  const handlePay = () => {
-    setLoading(true);
-    setTimeout(() => {
-      placeOrder();
-    }, 1500);
+  const handleChange = (e) => {
+    setAddress({ ...address, [e.target.name]: e.target.value });
+  };
+
+  const handlePlaceOrder = () => {
+    const { name, phone, address: addr, city, pincode } = address;
+
+    if (!name || !phone || !addr || !city || !pincode) {
+      alert("Please fill all address fields");
+      return;
+    }
+
+    // save address
+    localStorage.setItem("sagora_address", JSON.stringify(address));
+
+    placeOrder();
   };
 
   return (
     <div className={`cart-page ${dark ? "dark" : ""}`}>
       {/* BACK */}
-      <button className="btn-primary" onClick={() => navigate("/cart")}>
-        <FaArrowLeft style={{ marginRight: "6px" }} />
-        Back to Cart
+      <button
+        className="btn-primary"
+        style={{ marginBottom: "20px" }}
+        onClick={() => navigate("/cart")}
+      >
+        ← Back to Cart
       </button>
 
-      <h2 style={{ marginTop: "20px" }}>Checkout</h2>
+      <h2>Checkout 💳</h2>
 
-      {/* ITEMS */}
+      {/* ORDER SUMMARY */}
       <div style={{ marginTop: "20px" }}>
         {cartItems.map((item, index) => (
           <div key={index} className="checkout-card">
             <div>
               <strong>{item.name}</strong>
-              <div style={{ fontSize: "14px", opacity: 0.8 }}>
+              <div style={{ opacity: 0.8 }}>
                 ₹{item.price} × {item.qty}
               </div>
             </div>
@@ -52,78 +65,49 @@ function Checkout({ cartItems, dark, placeOrder }) {
 
       <h3 style={{ marginTop: "20px" }}>Total: ₹{total}</h3>
 
-      {/* PAYMENT METHOD */}
-      <h3 style={{ marginTop: "30px" }}>Payment Method</h3>
+      {/* ADDRESS FORM */}
+      <h3 style={{ marginTop: "30px" }}>Delivery Address 📦</h3>
 
-      <div className="payment-box">
-        <label className={`payment-option ${method === "upi" ? "active" : ""}`}>
-          <input
-            type="radio"
-            name="payment"
-            checked={method === "upi"}
-            onChange={() => setMethod("upi")}
-          />
-          <FaGooglePay /> UPI
-        </label>
-
-        <label className={`payment-option ${method === "card" ? "active" : ""}`}>
-          <input
-            type="radio"
-            name="payment"
-            checked={method === "card"}
-            onChange={() => setMethod("card")}
-          />
-          <FaCreditCard /> Card
-        </label>
-
-        <label className={`payment-option ${method === "cod" ? "active" : ""}`}>
-          <input
-            type="radio"
-            name="payment"
-            checked={method === "cod"}
-            onChange={() => setMethod("cod")}
-          />
-          <FaMoneyBillWave /> Cash on Delivery
-        </label>
+      <div className="address-form">
+        <input
+          name="name"
+          placeholder="Full Name"
+          value={address.name}
+          onChange={handleChange}
+        />
+        <input
+          name="phone"
+          placeholder="Phone Number"
+          value={address.phone}
+          onChange={handleChange}
+        />
+        <textarea
+          name="address"
+          placeholder="Full Address"
+          value={address.address}
+          onChange={handleChange}
+        />
+        <input
+          name="city"
+          placeholder="City"
+          value={address.city}
+          onChange={handleChange}
+        />
+        <input
+          name="pincode"
+          placeholder="Pincode"
+          value={address.pincode}
+          onChange={handleChange}
+        />
       </div>
 
-      {/* PAYMENT DETAILS */}
-      {method === "upi" && (
-        <input
-          className="payment-input"
-          placeholder="Enter UPI ID (example@upi)"
-        />
-      )}
-
-      {method === "card" && (
-        <>
-          <input className="payment-input" placeholder="Card Number" />
-          <input className="payment-input" placeholder="MM/YY" />
-          <input className="payment-input" placeholder="CVV" />
-        </>
-      )}
-
-      {method === "cod" && (
-        <p style={{ marginTop: "12px", opacity: 0.8 }}>
-          Pay with cash when the order is delivered to your address.
-        </p>
-      )}
-
-      {/* PAY */}
+      {/* PLACE ORDER */}
       <button
         className="btn-primary"
-        style={{ marginTop: "20px", opacity: loading ? 0.7 : 1 }}
-        disabled={loading}
-        onClick={handlePay}
+        style={{ marginTop: "30px" }}
+        onClick={handlePlaceOrder}
       >
-        {loading ? (
-          <span className="spinner"></span>
-        ) : (
-          <>
-            <FaCheckCircle style={{ marginRight: "6px" }} />
-            {method === "cod" ? "Place Order" : `Pay ₹${total}`}
-          </>
-        )}
+        Place Order
       </button>
     </div>
   );

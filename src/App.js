@@ -163,6 +163,22 @@ function App() {
           element={<Success dark={dark} />}
         />
       </Routes>
+      <footer
+  style={{
+    marginTop: "60px",
+    padding: "20px",
+    textAlign: "center",
+    fontSize: "14px",
+    opacity: 0.7,
+  }}
+>
+  <p>
+    SAGORA is an online store offering electronic accessories.
+    <br />
+    Currently operating in testing phase.
+  </p>
+</footer>
+
     </div>
   );
 }

@@ -371,3 +371,32 @@ p {
   border: 1px solid #333;
   color: white;
 }
+/* =======================
+   ADDRESS FORM
+======================= */
+.address-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  max-width: 420px;
+}
+
+.address-form input,
+.address-form textarea {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.address-form textarea {
+  resize: none;
+  height: 80px;
+}
+
+.dark .address-form input,
+.dark .address-form textarea {
+  background: #1e1e1e;
+  color: white;
+  border: 1px solid #444;
+}

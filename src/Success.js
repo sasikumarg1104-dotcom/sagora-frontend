@@ -1,44 +1,70 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 function Success({ dark }) {
   const navigate = useNavigate();
+  const [orderId, setOrderId] = useState("");
+
+  // Generate fake order ID
+  useEffect(() => {
+    const id = "SAG" + Math.floor(100000 + Math.random() * 900000);
+    setOrderId(id);
+  }, []);
 
   return (
     <div
       className={`cart-page ${dark ? "dark" : ""}`}
       style={{
         display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
         justifyContent: "center",
+        alignItems: "center",
         textAlign: "center",
-        animation: "fadeIn 0.6s ease",
       }}
     >
-      {/* CHECK ICON */}
       <div
         style={{
-          fontSize: "80px",
-          marginBottom: "20px",
-          animation: "slideUp 0.6s ease",
+          background: dark ? "#1e1e1e" : "#ffffff",
+          padding: "40px",
+          borderRadius: "18px",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+          animation: "fadeIn 0.6s ease",
+          maxWidth: "420px",
+          width: "100%",
         }}
       >
-        ✅
+        {/* ICON */}
+        <div style={{ fontSize: "64px", marginBottom: "10px" }}>🎉</div>
+
+        <h2 style={{ marginBottom: "10px" }}>
+          Order Placed Successfully!
+        </h2>
+
+        <p style={{ opacity: 0.8 }}>
+          Thank you for shopping with <strong>SAGORA</strong>
+        </p>
+
+        {/* ORDER ID */}
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "12px",
+            borderRadius: "10px",
+            background: dark ? "#2a2a2a" : "#f3f3f3",
+            fontWeight: "bold",
+          }}
+        >
+          Order ID: {orderId}
+        </div>
+
+        {/* BUTTON */}
+        <button
+          className="btn-primary"
+          style={{ marginTop: "30px", width: "100%" }}
+          onClick={() => navigate("/")}
+        >
+          Continue Shopping
+        </button>
       </div>
-
-      <h1>Order Placed Successfully!</h1>
-      <p style={{ maxWidth: "400px", marginTop: "10px", opacity: 0.85 }}>
-        Thank you for shopping with SAGORA.  
-        Your order will be delivered soon 🚚
-      </p>
-
-      <button
-        className="btn-primary"
-        style={{ marginTop: "30px" }}
-        onClick={() => navigate("/")}
-      >
-        Continue Shopping
-      </button>
     </div>
   );
 }
