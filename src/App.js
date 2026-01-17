@@ -1,15 +1,22 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
+
 import Header from "./Header";
-import ProductCard from "./ProductCard";
 import Cart from "./Cart";
 import Checkout from "./Checkout";
 import Success from "./Success";
+import CategoryPage from "./CategoryPage";
+import SubCategoryPage from "./SubCategoryPage";
+
+// ✅ SINGLE SOURCE OF TRUTH (VERY IMPORTANT)
+import { categories, products } from "./data/products";
 
 function App() {
   const [dark, setDark] = useState(false);
 
-  // 🛒 LOAD CART FROM LOCALSTORAGE
+  /* ======================
+     CART STATE (LOCALSTORAGE)
+  ====================== */
   const [cartItems, setCartItems] = useState(() => {
     const saved = localStorage.getItem("sagora_cart");
     return saved ? JSON.parse(saved) : [];
@@ -17,17 +24,17 @@ function App() {
 
   const navigate = useNavigate();
 
-  // 💾 SAVE CART TO LOCALSTORAGE
+  /* 💾 SAVE CART */
   useEffect(() => {
     localStorage.setItem("sagora_cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // 🌙 TOGGLE THEME
-  const toggleTheme = () => setDark(!dark);
+  /* 🌙 THEME */
+  const toggleTheme = () => setDark((prev) => !prev);
 
-  // ➕ ADD TO CART
+  /* ➕ ADD TO CART */
   const addToCart = (product) => {
-    const index = cartItems.findIndex((i) => i.name === product.name);
+    const index = cartItems.findIndex((i) => i.id === product.id);
 
     if (index !== -1) {
       const updated = [...cartItems];
@@ -38,7 +45,7 @@ function App() {
     }
   };
 
-  // ➖ UPDATE QUANTITY
+  /* ➖ UPDATE QUANTITY */
   const updateQty = (index, delta) => {
     const updated = [...cartItems];
     updated[index].qty += delta;
@@ -50,17 +57,17 @@ function App() {
     setCartItems(updated);
   };
 
-  // ❌ REMOVE ITEM
+  /* ❌ REMOVE ITEM */
   const removeItem = (index) => {
     const updated = [...cartItems];
     updated.splice(index, 1);
     setCartItems(updated);
   };
 
-  // ✅ PLACE ORDER
+  /* ✅ PLACE ORDER */
   const placeOrder = () => {
-    setCartItems([]);                       // clear state
-    localStorage.removeItem("sagora_cart"); // clear storage
+    setCartItems([]);
+    localStorage.removeItem("sagora_cart");
     navigate("/success");
   };
 
@@ -73,7 +80,7 @@ function App() {
         color: dark ? "#ffffff" : "#000000",
       }}
     >
-      {/* HEADER */}
+      {/* ================= HEADER ================= */}
       <Header
         toggleTheme={toggleTheme}
         cartCount={cartItems.reduce((sum, item) => sum + item.qty, 0)}
@@ -83,7 +90,7 @@ function App() {
       />
 
       <Routes>
-        {/* HOME */}
+        {/* ================= HOME (CATEGORIES) ================= */}
         <Route
           path="/"
           element={
@@ -91,7 +98,6 @@ function App() {
               <h1>Welcome to SAGORA 🛒</h1>
               <p>World-class shopping experience</p>
 
-              {/* PRODUCT GRID */}
               <div
                 className="product-grid"
                 style={{
@@ -100,37 +106,60 @@ function App() {
                     "repeat(auto-fit, minmax(220px, 1fr))",
                   gap: "30px",
                   marginTop: "40px",
-                  maxWidth: "1000px",
-                  marginLeft: "auto",
-                  marginRight: "auto",
+                  maxWidth: "1100px",
+                  margin: "auto",
                 }}
               >
-                <ProductCard
-                  product={{ name: "Headphones", price: 999 }}
-                  addToCart={addToCart}
-                  dark={dark}
-                />
-                <ProductCard
-                  product={{ name: "Smart Watch", price: 1999 }}
-                  addToCart={addToCart}
-                  dark={dark}
-                />
-                <ProductCard
-                  product={{ name: "Bluetooth Speaker", price: 1499 }}
-                  addToCart={addToCart}
-                  dark={dark}
-                />
-                <ProductCard
-                  product={{ name: "Wireless Mouse", price: 499 }}
-                  addToCart={addToCart}
-                  dark={dark}
-                />
+                {categories.map((cat) => (
+                  <div
+                    key={cat.id}
+                    className="product-card"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => navigate(`/category/${cat.slug}`)}
+                  >
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      style={{
+                        width: "100%",
+                        height: "160px",
+                        objectFit: "cover",
+                        borderRadius: "12px",
+                      }}
+                    />
+                    <h3 style={{ marginTop: "12px" }}>{cat.name}</h3>
+                    <p style={{ opacity: 0.7 }}>Explore products</p>
+                  </div>
+                ))}
               </div>
             </div>
           }
         />
 
-        {/* CART */}
+        {/* ================= CATEGORY → SUB-CATEGORIES ================= */}
+        <Route
+          path="/category/:category"
+          element={
+            <CategoryPage
+              products={products}
+              dark={dark}
+            />
+          }
+        />
+
+        {/* ================= SUB-CATEGORY → PRODUCTS ================= */}
+        <Route
+          path="/category/:category/:subCategory"
+          element={
+            <SubCategoryPage
+              products={products}
+              addToCart={addToCart}
+              dark={dark}
+            />
+          }
+        />
+
+        {/* ================= CART ================= */}
         <Route
           path="/cart"
           element={
@@ -145,7 +174,7 @@ function App() {
           }
         />
 
-        {/* CHECKOUT */}
+        {/* ================= CHECKOUT ================= */}
         <Route
           path="/checkout"
           element={
@@ -157,28 +186,26 @@ function App() {
           }
         />
 
-        {/* SUCCESS */}
-        <Route
-          path="/success"
-          element={<Success dark={dark} />}
-        />
+        {/* ================= SUCCESS ================= */}
+        <Route path="/success" element={<Success dark={dark} />} />
       </Routes>
-      <footer
-  style={{
-    marginTop: "60px",
-    padding: "20px",
-    textAlign: "center",
-    fontSize: "14px",
-    opacity: 0.7,
-  }}
->
-  <p>
-    SAGORA is an online store offering electronic accessories.
-    <br />
-    Currently operating in testing phase.
-  </p>
-</footer>
 
+      {/* ================= FOOTER ================= */}
+      <footer
+        style={{
+          marginTop: "60px",
+          padding: "20px",
+          textAlign: "center",
+          fontSize: "14px",
+          opacity: 0.7,
+        }}
+      >
+        <p>
+          SAGORA is an online store offering electronic accessories.
+          <br />
+          Currently operating in testing phase.
+        </p>
+      </footer>
     </div>
   );
 }
