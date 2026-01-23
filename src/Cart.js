@@ -1,65 +1,58 @@
-import { FaPlus, FaMinus, FaTrash, FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
-function Cart({
-  cartItems,
-  updateQty,
-  removeItem,
-  dark,
-  goHome,
-  goCheckout,
-}) {
+function Cart({ cartItems, updateQty, removeItem }) {
+  const navigate = useNavigate();
+
   const total = cartItems.reduce(
     (sum, item) => sum + item.price * item.qty,
     0
   );
 
   return (
-    <div className={`cart-page ${dark ? "dark" : ""}`}>
-      {/* BACK */}
-      <button className="btn-primary" onClick={goHome}>
-        <FaArrowLeft style={{ marginRight: "6px" }} />
-        Back to Home
+    <div className="cart-page">
+      {/* ✅ BACK TO HOME */}
+      <button
+        className="btn-primary"
+        onClick={() => navigate("/")}
+        style={{ marginBottom: "20px" }}
+      >
+        ← Back to Home
       </button>
 
-      <h2 style={{ margin: "20px 0" }}>Your Cart</h2>
+      <h2>Your Cart</h2>
 
       {cartItems.length === 0 ? (
         <p>Your cart is empty</p>
       ) : (
         <>
           {cartItems.map((item, index) => (
-            <div key={index} className="cart-card-grid">
-              {/* PRODUCT INFO */}
+            <div key={item.id} className="cart-card-grid">
               <div>
                 <div className="cart-title">{item.name}</div>
                 <div className="cart-price">₹{item.price}</div>
               </div>
 
-              {/* QUANTITY */}
               <div className="cart-qty">
                 <button
                   className="qty-btn"
                   onClick={() => updateQty(index, -1)}
                 >
-                  <FaMinus />
+                  −
                 </button>
-
                 <strong>{item.qty}</strong>
-
                 <button
                   className="qty-btn"
                   onClick={() => updateQty(index, 1)}
                 >
-                  <FaPlus />
+                  +
                 </button>
               </div>
 
-              {/* REMOVE */}
               <button
                 className="remove-btn"
                 onClick={() => removeItem(index)}
               >
-                <FaTrash />
+                🗑
               </button>
             </div>
           ))}
@@ -69,7 +62,7 @@ function Cart({
           <button
             className="btn-primary"
             style={{ marginTop: "20px" }}
-            onClick={goCheckout}
+            onClick={() => navigate("/checkout")}
           >
             Proceed to Checkout
           </button>

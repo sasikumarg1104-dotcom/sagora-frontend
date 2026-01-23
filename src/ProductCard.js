@@ -1,41 +1,57 @@
-function ProductCard({ product, addToCart, dark }) {
+import { useNavigate } from "react-router-dom";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
+
+function ProductCard({ product, addToCart, wishlist, toggleWishlist }) {
+  const navigate = useNavigate();
+
+  const isWishlisted = wishlist.some(
+    (item) => item.id === product.id
+  );
+
+  const image =
+    product.images?.[0] ||
+    product.image ||
+    "https://via.placeholder.com/300";
+
   return (
-    <div
-      style={{
-        backgroundColor: dark ? "#1e1e1e" : "#ffffff",
-        color: dark ? "#ffffff" : "#000",
-        padding: "14px",
-        borderRadius: "10px",
-        boxShadow: "0 6px 18px rgba(0,0,0,.12)",
-      }}
-    >
+    <div className="product-card">
       <img
-        src="https://picsum.photos/300"
+        src={image}
         alt={product.name}
+        onClick={() => navigate(`/product/${product.id}`)}
         style={{
           width: "100%",
-          height: "180px",
+          height: 180,
           objectFit: "cover",
-          borderRadius: "8px",
+          borderRadius: 12,
+          cursor: "pointer",
         }}
       />
 
-      <h3>{product.name}</h3>
-      <p><b>₹{product.price}</b></p>
+      <h3 onClick={() => navigate(`/product/${product.id}`)}>
+        {product.name}
+      </h3>
 
-      <button
-        onClick={() => addToCart(product)}
-        style={{
-          width: "100%",
-          padding: "10px",
-          backgroundColor: "#febd69",
-          border: "none",
-          borderRadius: "6px",
-          fontWeight: "bold",
-        }}
-      >
-        Add to Cart
-      </button>
+      <p style={{ fontWeight: "bold" }}>₹{product.price}</p>
+
+      <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+        <button className="btn-primary" onClick={() => addToCart(product)}>
+          Add to Cart
+        </button>
+
+        <button
+          onClick={() => toggleWishlist(product)}
+          style={{
+            border: "none",
+            background: "transparent",
+            fontSize: 20,
+            cursor: "pointer",
+            color: isWishlisted ? "red" : "#555",
+          }}
+        >
+          {isWishlisted ? <FaHeart /> : <FaRegHeart />}
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,10 +1,31 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useState } from "react";
+import ProductCard from "./ProductCard";
 
-function CategoryPage({ products, dark }) {
+// category === "home-kitchen"
+
+
+function CategoryPage({
+  products,
+  addToCart,
+  wishlist,
+  toggleWishlist,
+}) {
   const { category } = useParams();
-  const navigate = useNavigate();
 
-  // Extract unique subcategories
+  const [price, setPrice] = useState(5000);
+  const [rating, setRating] = useState(0);
+  const [subCategory, setSubCategory] = useState("");
+
+  const filtered = products.filter((p) => {
+    return (
+      p.category === category &&
+      p.price <= price &&
+      p.rating >= rating &&
+      (subCategory === "" || p.subCategory === subCategory)
+    );
+  });
+
   const subCategories = [
     ...new Set(
       products
@@ -14,43 +35,74 @@ function CategoryPage({ products, dark }) {
   ];
 
   return (
-    <div className={`cart-page ${dark ? "dark" : ""}`}>
-      <button
-        className="btn-primary"
-        onClick={() => navigate("/")}
-        style={{ marginBottom: "20px" }}
-      >
-        ← Back to Categories
-      </button>
-
-      <h2 style={{ textTransform: "capitalize" }}>
-        {category}
+    <div style={{ padding: "40px" }}>
+      <h2 style={{ textAlign: "center" }}>
+        {category.replace("-", " ").toUpperCase()}
       </h2>
 
+      {/* FILTERS */}
       <div
-        className="product-grid"
         style={{
-          display: "grid",
-          gridTemplateColumns:
-            "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "30px",
-          marginTop: "30px",
+          display: "flex",
+          gap: "20px",
+          justifyContent: "center",
+          margin: "30px 0",
+          flexWrap: "wrap",
         }}
       >
-        {subCategories.map((sub) => (
-          <div
-            key={sub}
-            className="product-card"
-            style={{ cursor: "pointer" }}
-            onClick={() =>
-              navigate(`/category/${category}/${sub}`)
-            }
+        {/* PRICE */}
+        <div>
+          <label>Max Price: ₹{price}</label>
+          <input
+            type="range"
+            min="100"
+            max="5000"
+            step="100"
+            value={price}
+            onChange={(e) => setPrice(Number(e.target.value))}
+          />
+        </div>
+
+        {/* RATING */}
+        <div>
+          <label>Min Rating</label>
+          <select
+            value={rating}
+            onChange={(e) => setRating(Number(e.target.value))}
           >
-            <h3 style={{ textTransform: "capitalize" }}>
-              {sub}
-            </h3>
-            <p>View products</p>
-          </div>
+            <option value="0">All</option>
+            <option value="4">4 ⭐+</option>
+            <option value="4.5">4.5 ⭐+</option>
+          </select>
+        </div>
+
+        {/* SUBCATEGORY */}
+        <div>
+          <label>Subcategory</label>
+          <select
+            value={subCategory}
+            onChange={(e) => setSubCategory(e.target.value)}
+          >
+            <option value="">All</option>
+            {subCategories.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* PRODUCTS */}
+      <div className="product-grid">
+        {filtered.map((p) => (
+          <ProductCard
+            key={p.id}
+            product={p}
+            addToCart={addToCart}
+            wishlist={wishlist}
+            toggleWishlist={toggleWishlist}
+          />
         ))}
       </div>
     </div>

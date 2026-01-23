@@ -1,212 +1,315 @@
+// src/App.js
 import { useState, useEffect } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  useNavigate,
+  Navigate,
+} from "react-router-dom";
 
-import Header from "./Header";
+/* ===== USER PAGES ===== */
+import Home from "./Home";
 import Cart from "./Cart";
 import Checkout from "./Checkout";
 import Success from "./Success";
 import CategoryPage from "./CategoryPage";
-import SubCategoryPage from "./SubCategoryPage";
+import ProductDetails from "./ProductDetails";
+import Login from "./Login";
+import Wishlist from "./Wishlist";
+import SearchPage from "./SearchPage";
+import Header from "./Header";
+import Orders from "./Orders";
 
-// ✅ SINGLE SOURCE OF TRUTH (VERY IMPORTANT)
-import { categories, products } from "./data/products";
+/* ===== ADMIN PAGES ===== */
+import AdminDashboard from "./AdminDashboard";
+import AdminLogin from "./AdminLogin";
+import AdminOrders from "./AdminOrders";
+import AdminAnalytics from "./AdminAnalytics";
+
+/* ===== DATA ===== */
+import { products as staticProducts } from "./data/products";
 
 function App() {
-  const [dark, setDark] = useState(false);
-
-  /* ======================
-     CART STATE (LOCALSTORAGE)
-  ====================== */
-  const [cartItems, setCartItems] = useState(() => {
-    const saved = localStorage.getItem("sagora_cart");
-    return saved ? JSON.parse(saved) : [];
-  });
-
   const navigate = useNavigate();
 
-  /* 💾 SAVE CART */
+  /* ================= AUTH ================= */
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("sagora_user"));
+    } catch {
+      return null;
+    }
+  });
+
+  /* ================= PRODUCTS ================= */
+  const [products] = useState(() => {
+    return (
+      JSON.parse(localStorage.getItem("sagora_products")) ||
+      staticProducts
+    );
+  });
+
+  /* ================= CART ================= */
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("sagora_cart")) || [];
+    } catch {
+      return [];
+    }
+  });
+
+  /* ================= WISHLIST ================= */
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("sagora_wishlist")) || [];
+    } catch {
+      return [];
+    }
+  });
+
+  /* ================= STORAGE ================= */
   useEffect(() => {
     localStorage.setItem("sagora_cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  /* 🌙 THEME */
-  const toggleTheme = () => setDark((prev) => !prev);
+  useEffect(() => {
+    localStorage.setItem("sagora_wishlist", JSON.stringify(wishlist));
+  }, [wishlist]);
 
-  /* ➕ ADD TO CART */
+  useEffect(() => {
+    localStorage.setItem("sagora_user", JSON.stringify(user));
+  }, [user]);
+
+  /* ================= CART FUNCTIONS ================= */
   const addToCart = (product) => {
-    const index = cartItems.findIndex((i) => i.id === product.id);
-
-    if (index !== -1) {
+    const idx = cartItems.findIndex((i) => i.id === product.id);
+    if (idx !== -1) {
       const updated = [...cartItems];
-      updated[index].qty += 1;
+      updated[idx].qty += 1;
       setCartItems(updated);
     } else {
       setCartItems([...cartItems, { ...product, qty: 1 }]);
     }
   };
 
-  /* ➖ UPDATE QUANTITY */
   const updateQty = (index, delta) => {
     const updated = [...cartItems];
     updated[index].qty += delta;
-
-    if (updated[index].qty <= 0) {
-      updated.splice(index, 1);
-    }
-
+    if (updated[index].qty <= 0) updated.splice(index, 1);
     setCartItems(updated);
   };
 
-  /* ❌ REMOVE ITEM */
   const removeItem = (index) => {
     const updated = [...cartItems];
     updated.splice(index, 1);
     setCartItems(updated);
   };
 
-  /* ✅ PLACE ORDER */
-  const placeOrder = () => {
+  /* ================= WISHLIST ================= */
+  const toggleWishlist = (product) => {
+    if (wishlist.some((i) => i.id === product.id)) {
+      setWishlist(wishlist.filter((i) => i.id !== product.id));
+    } else {
+      setWishlist([...wishlist, product]);
+    }
+  };
+
+  /* ================= PLACE ORDER ================= */
+  const placeOrder = (address) => {
+    const oldOrders =
+      JSON.parse(localStorage.getItem("sagora_orders")) || [];
+
+    const newOrder = {
+      id: Date.now(),
+      user: user?.email || "Guest",
+      items: cartItems,
+      total: cartItems.reduce(
+        (sum, i) => sum + i.price * i.qty,
+        0
+      ),
+      address,
+      date: new Date().toLocaleString(),
+      status: "Placed",
+    };
+
+    localStorage.setItem(
+      "sagora_orders",
+      JSON.stringify([...oldOrders, newOrder])
+    );
+
     setCartItems([]);
     localStorage.removeItem("sagora_cart");
     navigate("/success");
   };
 
+  /* ================= LOGOUT ================= */
+  const logout = () => {
+    setUser(null);
+    navigate("/login");
+  };
+
   return (
-    <div
-      className={dark ? "dark" : ""}
-      style={{
-        minHeight: "100vh",
-        backgroundColor: dark ? "#121212" : "#ffffff",
-        color: dark ? "#ffffff" : "#000000",
-      }}
-    >
-      {/* ================= HEADER ================= */}
+    <>
       <Header
-        toggleTheme={toggleTheme}
-        cartCount={cartItems.reduce((sum, item) => sum + item.qty, 0)}
-        openCart={() => navigate("/cart")}
-        goHome={() => navigate("/")}
-        dark={dark}
+        user={user}
+        cartCount={cartItems.reduce((sum, i) => sum + i.qty, 0)}
+        wishlistCount={wishlist.length}
+        logout={logout}
       />
 
       <Routes>
-        {/* ================= HOME (CATEGORIES) ================= */}
+        {/* HOME */}
         <Route
           path="/"
           element={
-            <div style={{ padding: "40px", textAlign: "center" }}>
-              <h1>Welcome to SAGORA 🛒</h1>
-              <p>World-class shopping experience</p>
-
-              <div
-                className="product-grid"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns:
-                    "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: "30px",
-                  marginTop: "40px",
-                  maxWidth: "1100px",
-                  margin: "auto",
-                }}
-              >
-                {categories.map((cat) => (
-                  <div
-                    key={cat.id}
-                    className="product-card"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => navigate(`/category/${cat.slug}`)}
-                  >
-                    <img
-                      src={cat.image}
-                      alt={cat.name}
-                      style={{
-                        width: "100%",
-                        height: "160px",
-                        objectFit: "cover",
-                        borderRadius: "12px",
-                      }}
-                    />
-                    <h3 style={{ marginTop: "12px" }}>{cat.name}</h3>
-                    <p style={{ opacity: 0.7 }}>Explore products</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Home
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
           }
         />
 
-        {/* ================= CATEGORY → SUB-CATEGORIES ================= */}
+        {/* CATEGORY */}
         <Route
           path="/category/:category"
           element={
             <CategoryPage
               products={products}
-              dark={dark}
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
             />
           }
         />
-
-        {/* ================= SUB-CATEGORY → PRODUCTS ================= */}
         <Route
-          path="/category/:category/:subCategory"
+  path="/orders"
+  element={
+    user ? (
+      <Orders user={user} />
+    ) : (
+      <Navigate to="/login" replace />
+    )
+  }
+/>
+
+
+        {/* PRODUCT */}
+        <Route
+          path="/product/:id"
           element={
-            <SubCategoryPage
+            <ProductDetails
               products={products}
               addToCart={addToCart}
-              dark={dark}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
             />
           }
         />
 
-        {/* ================= CART ================= */}
+        {/* SEARCH */}
+        <Route
+          path="/search"
+          element={
+            <SearchPage
+              products={products}
+              addToCart={addToCart}
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+            />
+          }
+        />
+
+        {/* WISHLIST */}
+        <Route
+          path="/wishlist"
+          element={
+            <Wishlist
+              wishlist={wishlist}
+              toggleWishlist={toggleWishlist}
+              addToCart={addToCart}
+            />
+          }
+        />
+
+        {/* CART */}
         <Route
           path="/cart"
           element={
-            <Cart
-              cartItems={cartItems}
-              updateQty={updateQty}
-              removeItem={removeItem}
-              dark={dark}
-              goHome={() => navigate("/")}
-              goCheckout={() => navigate("/checkout")}
-            />
+            user ? (
+              <Cart
+                cartItems={cartItems}
+                updateQty={updateQty}
+                removeItem={removeItem}
+                goCheckout={() => navigate("/checkout")}
+              />
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
 
-        {/* ================= CHECKOUT ================= */}
+        {/* CHECKOUT */}
         <Route
           path="/checkout"
           element={
-            <Checkout
-              cartItems={cartItems}
-              dark={dark}
-              placeOrder={placeOrder}
-            />
+            user ? (
+              <Checkout
+                cartItems={cartItems}
+                placeOrder={placeOrder}
+              />
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
 
-        {/* ================= SUCCESS ================= */}
-        <Route path="/success" element={<Success dark={dark} />} />
-      </Routes>
+        {/* USER ORDERS */}
+        <Route
+          path="/orders"
+          element={
+            user ? (
+              <AdminOrders user={user} />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
 
-      {/* ================= FOOTER ================= */}
-      <footer
-        style={{
-          marginTop: "60px",
-          padding: "20px",
-          textAlign: "center",
-          fontSize: "14px",
-          opacity: 0.7,
-        }}
-      >
-        <p>
-          SAGORA is an online store offering electronic accessories.
-          <br />
-          Currently operating in testing phase.
-        </p>
-      </footer>
-    </div>
+        {/* ADMIN DASHBOARD */}
+        <Route
+          path="/admin"
+          element={
+            user?.role === "admin" ? (
+              <AdminDashboard />
+            ) : (
+              <AdminLogin />
+            )
+          }
+        />
+
+        {/* ADMIN ANALYTICS */}
+        <Route
+          path="/admin/analytics"
+          element={
+            user?.role === "admin" ? (
+              <AdminAnalytics />
+            ) : (
+              <AdminLogin />
+            )
+          }
+        />
+
+        {/* LOGIN */}
+        <Route
+          path="/login"
+          element={<Login setUser={setUser} />}
+        />
+
+        {/* SUCCESS */}
+        <Route path="/success" element={<Success />} />
+      </Routes>
+    </>
   );
 }
 
