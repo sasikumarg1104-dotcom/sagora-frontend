@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 
+
 dotenv.config();
 const app = express();
 
@@ -25,3 +26,6 @@ app.use("/api/orders", orderRoutes);
 app.listen(process.env.PORT, () =>
   console.log(`Server running on port ${process.env.PORT}`)
 );
+app.use(cors({
+  origin: "https://sagora.netlify.app"
+}));
